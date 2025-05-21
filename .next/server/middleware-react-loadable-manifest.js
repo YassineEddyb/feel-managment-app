@@ -1,0 +1,1 @@
+self.__REACT_LOADABLE_MANIFEST='{"components/dashboard/VehicleMap.tsx -> leaflet":{"id":5752,"files":["static/chunks/d0deef33.d8e4dae5397587ae.js"]},"components/dashboard/VehicleMap.tsx -> react-leaflet":{"id":9712,"files":["static/chunks/d0deef33.d8e4dae5397587ae.js","static/chunks/712.c5784de0e7ff3d33.js"]}}';
