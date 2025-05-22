@@ -1,7 +1,19 @@
 import { VehiclePosition } from "@/types/vehicle";
 import "leaflet/dist/leaflet.css";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+// Declare global window property for TypeScript
+declare global {
+  interface Window {
+    vehicleMarkers: { [id: string]: any };
+  }
+}
+
+// Easing function for smoother animation
+const easeInOutCubic = (t: number): number => {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+};
 
 // Dynamically import Leaflet components to avoid SSR issues
 const MapContainer = dynamic(
@@ -19,6 +31,34 @@ const Marker = dynamic(
 const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), {
   ssr: false,
 });
+
+// Custom marker component to handle animation
+const AnimatedMarker = dynamic(
+  () =>
+    Promise.resolve(({ position, icon, popup, id }: any) => {
+      const markerRef = useRef<any>(null);
+
+      useEffect(() => {
+        if (markerRef.current) {
+          window.vehicleMarkers = window.vehicleMarkers || {};
+          window.vehicleMarkers[id] = markerRef.current;
+        }
+
+        return () => {
+          if (window.vehicleMarkers && window.vehicleMarkers[id]) {
+            delete window.vehicleMarkers[id];
+          }
+        };
+      }, [id]);
+
+      return (
+        <Marker position={position} icon={icon} ref={markerRef}>
+          {popup}
+        </Marker>
+      );
+    }),
+  { ssr: false }
+);
 
 interface VehicleMapProps {
   vehicles: VehiclePosition[];
@@ -38,10 +78,16 @@ export default function VehicleMap({
   // State for Leaflet library
   const [L, setL] = useState<any>(null);
 
+  // Store previous positions for animation
+  const prevPositionsRef = useRef<{ [id: string]: VehiclePosition }>({});
+
   useEffect(() => {
     // Import Leaflet on client-side only
     import("leaflet").then((leaflet) => {
       setL(leaflet);
+
+      // Initialize global window property for markers
+      window.vehicleMarkers = window.vehicleMarkers || {};
 
       // Add CSS for vehicle markers
       const style = document.createElement("style");
@@ -50,14 +96,135 @@ export default function VehicleMap({
           display: flex;
           align-items: center;
           justify-content: center;
+          transition: transform 0.3s ease-in-out;
         }
         .vehicle-marker img {
-          width: 32px;
-          height: 20px;
+          width: 20px;
+          height: 32px;
         }
       `;
       document.head.appendChild(style);
     });
+  }, []);
+
+  // Effect for animating vehicle markers when they move
+  useEffect(() => {
+    if (!L || !window.vehicleMarkers) return;
+
+    // Get current vehicles as a map for easy lookup
+    const currentVehiclesMap = vehicles.reduce((acc, vehicle) => {
+      acc[vehicle.id] = vehicle;
+      return acc;
+    }, {} as { [id: string]: VehiclePosition });
+
+    // Check for vehicles that need animation
+    Object.entries(window.vehicleMarkers).forEach(([id, marker]) => {
+      const prevPos = prevPositionsRef.current[id];
+      const currentPos = currentVehiclesMap[id];
+
+      // Skip if we don't have both previous and current positions
+      if (!prevPos || !currentPos) return;
+
+      // Skip if position hasn't changed
+      if (prevPos.lat === currentPos.lat && prevPos.lng === currentPos.lng)
+        return;
+
+      // Calculate animation steps (smoother transition)
+      const numSteps = 60; // Increase steps for smoother animation
+      let step = 0;
+
+      // Get the initial and target headings, handling the case where they cross the 0/360 boundary
+      const initialHeading = prevPos.heading || 0;
+      const targetHeading = currentPos.heading || 0;
+
+      // Calculate the shortest path for rotation
+      let headingDiff = (targetHeading - initialHeading + 360) % 360;
+      if (headingDiff > 180) headingDiff -= 360;
+
+      // Calculate the distance for speed-based animation
+      const distance = Math.sqrt(
+        Math.pow(currentPos.lat - prevPos.lat, 2) +
+          Math.pow(currentPos.lng - prevPos.lng, 2)
+      );
+
+      // Duration based on distance (longer distance = slightly longer animation)
+      const baseDuration = 1000; // 1 second base duration
+      const distanceScale = 5000; // Scaling factor for distance
+      const duration = Math.min(baseDuration + distance * distanceScale, 2000); // Cap at 2 seconds
+      const timeStep = duration / numSteps;
+
+      let lastTimestamp = 0;
+
+      const animate = (timestamp: number) => {
+        if (step >= numSteps) return;
+
+        // Only update if enough time has passed
+        if (lastTimestamp === 0) {
+          lastTimestamp = timestamp;
+        }
+
+        const elapsed = timestamp - lastTimestamp;
+
+        if (elapsed < timeStep) {
+          requestAnimationFrame(animate);
+          return;
+        }
+
+        lastTimestamp = timestamp;
+
+        // Calculate intermediate position with easing
+        const progress = step / numSteps;
+        // Use cubic easing for more natural movement
+        const easedProgress = easeInOutCubic(progress);
+
+        const lat =
+          prevPos.lat + (currentPos.lat - prevPos.lat) * easedProgress;
+        const lng =
+          prevPos.lng + (currentPos.lng - prevPos.lng) * easedProgress;
+
+        // Calculate intermediate heading with easing
+        const heading =
+          (initialHeading + headingDiff * easedProgress + 360) % 360;
+
+        // Update marker position
+        marker.setLatLng([lat, lng]);
+
+        // Update icon with new heading
+        const isStatic = isStaticVehicle(id);
+        const iconPath = isStatic
+          ? "/icons/golf-cart.png"
+          : "/icons/golf-cart-3.png";
+
+        marker.setIcon(
+          new L.DivIcon({
+            html: `<div style="transform: rotate(${heading}deg);"><img src="${iconPath}" alt="Vehicle" /></div>`,
+            className: "vehicle-marker",
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            popupAnchor: [0, -16],
+          })
+        );
+
+        step++;
+        requestAnimationFrame(animate);
+      };
+
+      // Start the animation
+      requestAnimationFrame(animate);
+    });
+
+    // Update previous positions for next animation
+    prevPositionsRef.current = { ...currentVehiclesMap };
+  }, [vehicles, L]);
+
+  // Declare the window type extension for TypeScript
+  useEffect(() => {
+    return () => {
+      // Clean up the global object when component unmounts
+      if (window.vehicleMarkers) {
+        window.vehicleMarkers = {};
+      }
+    };
   }, []);
 
   if (!L) {
@@ -102,32 +269,30 @@ export default function VehicleMap({
           const vehicleIcon = createVehicleIcon(vehicle);
           const isStatic = isStaticVehicle(vehicle.id);
 
+          const popup = (
+            <Popup>
+              <div className="p-1">
+                <div className="font-bold">{vehicle.name}</div>
+                <div className="text-xs text-gray-600">
+                  Heading: {Math.round(vehicle.heading || 0)}°
+                </div>
+                {isStatic && (
+                  <div className="text-xs text-blue-600 mt-1">
+                    Static Vehicle
+                  </div>
+                )}
+              </div>
+            </Popup>
+          );
+
           return (
-            <Marker
+            <AnimatedMarker
               key={vehicle.id}
               position={[vehicle.lat, vehicle.lng]}
               icon={vehicleIcon}
-              eventHandlers={{
-                click: () => {
-                  // We don't need to call onVehicleClick here as it will be called from the button
-                  // This prevents double trigger, letting the popup open first
-                },
-              }}
-            >
-              <Popup>
-                <div className="p-1">
-                  <div className="font-bold">{vehicle.name}</div>
-                  <div className="text-xs text-gray-600">
-                    Heading: {Math.round(vehicle.heading || 0)}°
-                  </div>
-                  {isStatic && (
-                    <div className="text-xs text-blue-600 mt-1">
-                      Static Vehicle
-                    </div>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
+              popup={popup}
+              id={vehicle.id}
+            />
           );
         })}
       </MapContainer>

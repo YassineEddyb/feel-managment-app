@@ -101,7 +101,7 @@ export default function Dashboard() {
     fetchVehicles();
 
     // Set up polling for real-time updates (every 5 seconds)
-    const intervalId = setInterval(fetchVehicles, 10000);
+    const intervalId = setInterval(fetchVehicles, 2000);
 
     return () => clearInterval(intervalId);
   }, []);
