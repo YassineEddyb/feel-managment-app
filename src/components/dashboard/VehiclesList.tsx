@@ -76,7 +76,7 @@ export default function VehiclesList({
     // Set up polling every 5 seconds
     const intervalId = setInterval(() => {
       fetchVehicleDetails(selectedDropdownId);
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(intervalId);
   }, [selectedDropdownId]);
@@ -84,7 +84,7 @@ export default function VehiclesList({
   return (
     <div className="p-4 h-full overflow-auto flex flex-col">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">Vehicle Details</h2>
+        <h2 className="text-lg text-white font-semibold">Vehicle Details</h2>
       </div>
 
       {/* Vehicle Selector Dropdown */}
@@ -98,7 +98,7 @@ export default function VehiclesList({
         <div className="relative">
           <select
             id="vehicleSelector"
-            className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+            className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
             value={selectedDropdownId || ""}
             onChange={handleDropdownChange}
           >

@@ -101,7 +101,7 @@ export default function Dashboard() {
     fetchVehicles();
 
     // Set up polling for real-time updates (every 5 seconds)
-    const intervalId = setInterval(fetchVehicles, 2000);
+    const intervalId = setInterval(fetchVehicles, 10000);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -128,7 +128,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-black">
       <main className="flex-1 flex flex-col md:flex-row">
         {/* Left sidebar - Vehicle list */}
         <div className="w-full md:w-80 ">

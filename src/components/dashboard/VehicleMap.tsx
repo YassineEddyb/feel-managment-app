@@ -29,8 +29,11 @@ export default function VehicleMap({
   vehicles,
   onVehicleClick,
 }: VehicleMapProps) {
-  // Set default map center to a central location (can be adjusted)
-  const defaultCenter = { lat: 32.219143, lng: -7.936173 };
+  // Use the first vehicle's position as center if available, otherwise use default
+  const mapCenter =
+    vehicles.length > 0
+      ? { lat: vehicles[0].lat, lng: vehicles[0].lng }
+      : { lat: 32.219143, lng: -7.936173 };
 
   // State for Leaflet library
   const [L, setL] = useState<any>(null);
@@ -76,9 +79,9 @@ export default function VehicleMap({
   };
 
   return (
-    <div className="h-[calc(100vh-140px)] w-full rounded-lg overflow-hidden ">
+    <div className="h-[calc(100vh-30px)] w-full rounded-lg overflow-hidden ">
       <MapContainer
-        center={defaultCenter}
+        center={mapCenter}
         zoom={18}
         style={{ height: "100%", width: "100%" }}
       >

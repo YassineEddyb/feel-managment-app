@@ -116,11 +116,6 @@ export const getVehicleDetails = async (
     );
 
     if (telemetryResponse.data?.result?.[0]?.telemetry) {
-      console.log(
-        "telemetryResponse: ",
-        telemetryResponse.data.result[0].telemetry
-      );
-
       const telemetry = telemetryResponse.data.result[0].telemetry;
 
       // Get the device name
