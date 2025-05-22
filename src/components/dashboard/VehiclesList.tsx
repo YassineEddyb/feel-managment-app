@@ -76,7 +76,7 @@ export default function VehiclesList({
     // Set up polling every 5 seconds
     const intervalId = setInterval(() => {
       fetchVehicleDetails(selectedDropdownId);
-    }, 4000);
+    }, 5000);
 
     return () => clearInterval(intervalId);
   }, [selectedDropdownId]);

@@ -13,44 +13,36 @@ const flespiApi = axios.create({
   },
 });
 
-// Mock data for fallback
-const MOCK_VEHICLES: VehiclePosition[] = [
-  { id: "1", name: "Truck 1", lat: 32.219143, lng: -7.936173 },
-  { id: "2", name: "Truck 2", lat: 35.7806, lng: -78.6452 },
-  { id: "3", name: "Van 1", lat: 35.7756, lng: -78.6302 },
-  { id: "4", name: "Car 1", lat: 35.7846, lng: -78.6432 },
-];
-
 // Static vehicles to always include
 const STATIC_VEHICLES: VehiclePosition[] = [
-  {
-    id: "static1",
-    name: "Golfette_GEP 02",
-    lat: 32.218543,
-    lng: -7.937073,
-    heading: 140,
-  },
-  {
-    id: "static2",
-    name: "Golfette_GEP 03",
-    lat: 32.219243,
-    lng: -7.935573,
-    heading: 140,
-  },
-  {
-    id: "static3",
-    name: "Golfette_GEP 04",
-    lat: 32.218851,
-    lng: -7.937073,
-    heading: 140,
-  },
-  {
-    id: "static4",
-    name: "Golfette_GEP 05",
-    lat: 32.219851,
-    lng: -7.937073,
-    heading: 140,
-  },
+  //   {
+  //     id: "static1",
+  //     name: "Golfette_GEP 07",
+  //     lat: 32.218543,
+  //     lng: -7.937073,
+  //     heading: 140,
+  //   },
+  //   {
+  //     id: "static2",
+  //     name: "Golfette_GEP 03",
+  //     lat: 32.219243,
+  //     lng: -7.935573,
+  //     heading: 140,
+  //   },
+  //   {
+  //     id: "static3",
+  //     name: "Golfette_GEP 04",
+  //     lat: 32.218851,
+  //     lng: -7.937073,
+  //     heading: 140,
+  //   },
+  //   {
+  //     id: "static4",
+  //     name: "Golfette_GEP 05",
+  //     lat: 32.219851,
+  //     lng: -7.937073,
+  //     heading: 140,
+  //   },
 ];
 
 /**
@@ -69,7 +61,7 @@ export const getAllVehiclesPositions = async (): Promise<VehiclePosition[]> => {
       devicesResponse.data.result.length === 0
     ) {
       // Return mock vehicles combined with static vehicles
-      return [...MOCK_VEHICLES, ...STATIC_VEHICLES];
+      return [...STATIC_VEHICLES];
     }
 
     const devices = devicesResponse.data.result;
@@ -127,9 +119,7 @@ export const getAllVehiclesPositions = async (): Promise<VehiclePosition[]> => {
 
     // Combine fetched vehicles with static vehicles
     const allVehicles = [
-      ...(vehiclesWithPosition.length > 0
-        ? vehiclesWithPosition
-        : MOCK_VEHICLES),
+      ...(vehiclesWithPosition.length > 0 ? vehiclesWithPosition : []),
       ...STATIC_VEHICLES,
     ];
 
@@ -137,7 +127,7 @@ export const getAllVehiclesPositions = async (): Promise<VehiclePosition[]> => {
   } catch (error) {
     console.error("Error fetching vehicle positions:", error);
     // Return mock vehicles combined with static vehicles
-    return [...MOCK_VEHICLES, ...STATIC_VEHICLES];
+    return [...STATIC_VEHICLES];
   }
 };
 
