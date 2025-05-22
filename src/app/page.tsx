@@ -128,10 +128,10 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-black">
-      <main className="flex-1 flex flex-col md:flex-row">
+    <div className="flex flex-col h-screen overflow-hidden bg-black">
+      <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left sidebar - Vehicle list */}
-        <div className="w-full md:w-80 ">
+        <div className="w-full md:w-80 h-full overflow-auto">
           <VehiclesList
             vehicles={vehicles}
             selectedVehicleId={selectedVehicleId}
@@ -141,15 +141,15 @@ export default function Dashboard() {
         </div>
 
         {/* Main content - Map */}
-        <div className="flex-1 p-4">
+        <div className="flex-1 p-2 h-full">
           {isLoading && !vehicles.length ? (
-            <div className="h-[calc(100vh-140px)] w-full bg-neutral-100 animate-pulse rounded-lg"></div>
+            <div className="h-full w-full bg-neutral-100 animate-pulse rounded-lg"></div>
           ) : error ? (
-            <div className="h-[calc(100vh-140px)] w-full flex items-center justify-center border border-red-200 bg-red-50 rounded-lg">
+            <div className="h-full w-full flex items-center justify-center border border-red-200 bg-red-50 rounded-lg">
               <p className="text-red-500">{error}</p>
             </div>
           ) : vehicles.length === 0 ? (
-            <div className="h-[calc(100vh-140px)] w-full flex items-center justify-center border border-neutral-200 bg-neutral-50 rounded-lg">
+            <div className="h-full w-full flex items-center justify-center border border-neutral-200 bg-neutral-50 rounded-lg">
               <p className="text-neutral-500">No vehicles found</p>
             </div>
           ) : (

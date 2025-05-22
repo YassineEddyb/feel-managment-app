@@ -88,7 +88,7 @@ export default function VehicleMap({
   };
 
   return (
-    <div className="h-[calc(100vh-30px)] w-full rounded-lg overflow-hidden ">
+    <div className="h-full w-full rounded-lg overflow-hidden">
       <MapContainer
         center={mapCenter}
         zoom={18}
