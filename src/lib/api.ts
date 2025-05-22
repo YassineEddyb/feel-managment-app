@@ -21,6 +21,38 @@ const MOCK_VEHICLES: VehiclePosition[] = [
   { id: "4", name: "Car 1", lat: 35.7846, lng: -78.6432 },
 ];
 
+// Static vehicles to always include
+const STATIC_VEHICLES: VehiclePosition[] = [
+  {
+    id: "static1",
+    name: "Golfette_GEP 02",
+    lat: 32.218543,
+    lng: -7.937073,
+    heading: 140,
+  },
+  {
+    id: "static2",
+    name: "Golfette_GEP 03",
+    lat: 32.219243,
+    lng: -7.935573,
+    heading: 140,
+  },
+  {
+    id: "static3",
+    name: "Golfette_GEP 04",
+    lat: 32.218851,
+    lng: -7.937073,
+    heading: 140,
+  },
+  {
+    id: "static4",
+    name: "Golfette_GEP 05",
+    lat: 32.219851,
+    lng: -7.937073,
+    heading: 140,
+  },
+];
+
 /**
  * Fetch all vehicle positions from Flespi API
  */
@@ -36,7 +68,8 @@ export const getAllVehiclesPositions = async (): Promise<VehiclePosition[]> => {
       !Array.isArray(devicesResponse.data.result) ||
       devicesResponse.data.result.length === 0
     ) {
-      return MOCK_VEHICLES;
+      // Return mock vehicles combined with static vehicles
+      return [...MOCK_VEHICLES, ...STATIC_VEHICLES];
     }
 
     const devices = devicesResponse.data.result;
@@ -92,14 +125,19 @@ export const getAllVehiclesPositions = async (): Promise<VehiclePosition[]> => {
       }
     }
 
-    // console.log("vehiclesWithPosition: ", vehiclesWithPosition);
+    // Combine fetched vehicles with static vehicles
+    const allVehicles = [
+      ...(vehiclesWithPosition.length > 0
+        ? vehiclesWithPosition
+        : MOCK_VEHICLES),
+      ...STATIC_VEHICLES,
+    ];
 
-    return vehiclesWithPosition.length > 0
-      ? vehiclesWithPosition
-      : MOCK_VEHICLES;
+    return allVehicles;
   } catch (error) {
     console.error("Error fetching vehicle positions:", error);
-    return MOCK_VEHICLES;
+    // Return mock vehicles combined with static vehicles
+    return [...MOCK_VEHICLES, ...STATIC_VEHICLES];
   }
 };
 
@@ -109,6 +147,27 @@ export const getAllVehiclesPositions = async (): Promise<VehiclePosition[]> => {
 export const getVehicleDetails = async (
   vehicleId: string
 ): Promise<VehicleDetails> => {
+  // Check if this is a static vehicle
+  const staticVehicle = STATIC_VEHICLES.find((v) => v.id === vehicleId);
+  if (staticVehicle) {
+    return {
+      id: staticVehicle.id,
+      name: staticVehicle.name,
+      lat: staticVehicle.lat,
+      lng: staticVehicle.lng,
+      speed: Math.floor(Math.random() * 25), // Random speed between 0-25 km/h
+      battery: 75 + Math.floor(Math.random() * 25), // Random battery between 75-100%
+      timestamp: Date.now(),
+      heading: staticVehicle.heading || 0,
+      additionalTelemetry: {
+        altitude: 100 + Math.floor(Math.random() * 50),
+        satellites: 8 + Math.floor(Math.random() * 4),
+        gsm_signal: 80 + Math.floor(Math.random() * 20),
+        movement: Math.random() > 0.3 ? "moving" : "stationary",
+      },
+    };
+  }
+
   try {
     // Get telemetry data for the specific device
     const telemetryResponse = await flespiApi.get(

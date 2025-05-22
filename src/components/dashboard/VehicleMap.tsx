@@ -66,11 +66,20 @@ export default function VehicleMap({
     );
   }
 
+  // Check if a vehicle is static based on its ID
+  const isStaticVehicle = (id: string) => id.startsWith("static");
+
   // Create a vehicle icon with the correct rotation
-  const createVehicleIcon = (heading: number = 0) => {
+  const createVehicleIcon = (vehicle: VehiclePosition) => {
+    const heading = vehicle.heading || 0;
+    const isStatic = isStaticVehicle(vehicle.id);
+    const iconPath = isStatic
+      ? "/icons/golf-cart.png"
+      : "/icons/golf-cart-3.png";
+
     // Create a div-based icon that we can rotate
     return new L.DivIcon({
-      html: `<div style="transform: rotate(${heading}deg);"><img src="/icons/golf-cart.png" alt="Vehicle" /></div>`,
+      html: `<div style="transform: rotate(${heading}deg);"><img src="${iconPath}" alt="Vehicle" /></div>`,
       className: "vehicle-marker",
       iconSize: [32, 32],
       iconAnchor: [16, 16],
@@ -90,8 +99,8 @@ export default function VehicleMap({
           url="https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png"
         />
         {vehicles.map((vehicle) => {
-          const heading = vehicle.heading || 0;
-          const vehicleIcon = createVehicleIcon(heading);
+          const vehicleIcon = createVehicleIcon(vehicle);
+          const isStatic = isStaticVehicle(vehicle.id);
 
           return (
             <Marker
@@ -109,8 +118,13 @@ export default function VehicleMap({
                 <div className="p-1">
                   <div className="font-bold">{vehicle.name}</div>
                   <div className="text-xs text-gray-600">
-                    Heading: {Math.round(heading)}°
+                    Heading: {Math.round(vehicle.heading || 0)}°
                   </div>
+                  {isStatic && (
+                    <div className="text-xs text-blue-600 mt-1">
+                      Static Vehicle
+                    </div>
+                  )}
                 </div>
               </Popup>
             </Marker>
