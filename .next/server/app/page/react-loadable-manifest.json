@@ -1,9 +1,0 @@
-{
-  "[project]/node_modules/react-leaflet/lib/index.js [app-client] (ecmascript, next/dynamic entry)": {
-    "id": "[project]/node_modules/react-leaflet/lib/index.js [app-client] (ecmascript, next/dynamic entry)",
-    "files": [
-      "static/chunks/node_modules_b088d178._.js",
-      "static/chunks/node_modules_react-leaflet_lib_index_6ad93a76.js"
-    ]
-  }
-}
